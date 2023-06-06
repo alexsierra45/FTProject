@@ -14,10 +14,36 @@
 #define BLUE "\033[0;34m"
 #define RESET "\033[0m"
 #define ERROR "\033[0;31mmy_ftp\033[0m"
+#define True 1
 
 // Función que ejecuta el loop principal
 void loop(int port, char *root_path) {
+    int sockfd, clientfd;
+    struct sockaddr_in client_address;
+    socklen_t client_address_size = sizeof(client_address);
 
+    sockfd = create_socket(port);
+
+    while (True) {
+        clientfd = accept(sockfd, (struct sockaddr*)&client_address, &client_address_size);
+
+        if (clientfd < 0) {
+            perror("Error accepting client");
+            exit(1);
+        }
+
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            perror("Error forking");
+            exit(EXIT_FAILURE);
+        } else if (pid == 0) {
+            close(sockfd);
+            handle_client(clientfd, root_path);
+            exit(EXIT_SUCCESS);
+        } 
+        else close(clientfd);
+    }
 }
 
 // Función que asigna el puerto
