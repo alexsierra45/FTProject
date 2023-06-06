@@ -6,10 +6,10 @@
 #include <string.h>
 #include <unistd.h>
 
-/// @brief Función que construye la dirección del servidor
-/// @param server_ip Dirección IP del servidor
-/// @param server_port Puerto del servidor
-/// @return Estructura sockaddr_in con la dirección del servidor
+/// @brief Function that builds a sockaddr_in structure
+/// @param server_ip Server IP
+/// @param server_port Server port
+/// @return sockaddr_in structure
 struct sockaddr_in build_server_addr(char *server_ip, int server_port) {
     struct sockaddr_in server = {0};
     server.sin_family = AF_INET;
@@ -18,9 +18,9 @@ struct sockaddr_in build_server_addr(char *server_ip, int server_port) {
     return server;
 }
 
-/// @brief Función que crea un socket
-/// @param port Puerto del servidor
-/// @return Descriptor del socket
+/// @brief Function that creates a socket
+/// @param port Port to bind the socket
+/// @return Socket file descriptor
 int create_socket(int port) {
     struct sockaddr_in server_address;
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);

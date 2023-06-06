@@ -16,7 +16,7 @@
 #define ERROR "\033[0;31mmy_ftp\033[0m"
 #define True 1
 
-// Función que ejecuta el loop principal
+// Principal loop
 void loop(int port, char *root_path) {
     int sockfd, clientfd;
     struct sockaddr_in client_address;
@@ -46,7 +46,7 @@ void loop(int port, char *root_path) {
     }
 }
 
-// Función que asigna el puerto
+// Function that asign the port
 void asign_port(int *port, char *args[]) {
     if (args[1] == NULL) *port = 5000;
     else {
@@ -62,7 +62,7 @@ void asign_port(int *port, char *args[]) {
     }
 }
 
-// Función que asigna el directorio raíz
+// Function that assigns the root path
 void asign_root_path(char **root_path, char *args[]) {
     uid_t uid;
     uid = getuid();
@@ -84,7 +84,7 @@ void asign_root_path(char **root_path, char *args[]) {
     }
 }
 
-// Función principal
+// Main function
 int main(int argn, char *argv[]) {
     signal(SIGPIPE, SIG_IGN);
 
