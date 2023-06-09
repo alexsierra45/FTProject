@@ -61,8 +61,32 @@ int create_socket(int port) {
 }
 
 int send_file(char *path, int clientfd) {
+    int fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        return 0;
+    }
 
+    off_t offset = 0;
+    struct stat stat_buf;
+    if (fstat(fd, &stat_buf) == -1) {
+        perror("Error fstat failed");
+        return 1;
+    }
 
+    char header[MAX_SIZE_BUFFER];
+    snprintf(header, sizeof(header), "HTTP/1.1 200 OK\r\n"
+                                     "Content-Type: application/octet-stream\r\n"
+                                     "Content-Disposition: attachment; filename=\"%s\"\r\n"
+                                     "Content-Length: %ld\r\n"
+                                     "\r\n", path, stat_buf.st_size);
+
+    if (send(clientfd, header, strlen(header), 0) == -1 || 
+        sendfile(clientfd, fd, &offset, stat_buf.st_size) == -1) {
+            perror("Error send failed");
+            send(clientfd, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);
+    }
+
+    close(fd);
     return 1;
 }
 
