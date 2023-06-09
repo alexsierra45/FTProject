@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>FTProject</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        th {
+            background-color: #4c53af;
+            color: rgb(233, 220, 220);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .gg-arrow-left {
+            box-sizing: border-box;
+            position: relative;
+            display: block;
+            transform: scale(var(--ggs, 1));
+            width: 22px;
+            height: 22px
+        }
+
+        .gg-arrow-left::after,
+        .gg-arrow-left::before {
+            content: "";
+            display: block;
+            box-sizing: border-box;
+            position: absolute;
+            left: 3px
+        }
+
+        .gg-arrow-left::after {
+            width: 8px;
+            height: 8px;
+            border-bottom: 2px solid;
+            border-left: 2px solid;
+            transform: rotate(45deg);
+            bottom: 7px
+        }
+
+        .gg-arrow-left::before {
+            width: 16px;
+            height: 2px;
+            bottom: 10px;
+            background: currentColor
+        }
+
+        .file {
+            background: #eee;
+            background: -moz-linear-gradient(top, #ddd 0, #eee 15%, #fff 40%, #fff 70%, #eee 100%);
+            background: -webkit-linear-gradient(top, #ddd 0, #eee 15%, #fff 40%, #fff 70%, #eee 100%);
+            border: 1px solid #ccc;
+            -moz-border-radius: 1px 10px 1px 1px;
+            -webkit-border-radius: 1px 10px 1px 1px;
+            border-radius: 1px 10px 1px 1px;
+            -moz-box-shadow: inset rgba(255, 255, 255, 0.8) 0 1px 1px;
+            -webkit-box-shadow: inset rgba(255, 255, 255, 0.8) 0 1px 1px;
+            box-shadow: inset rgba(255, 255, 255, 0.8) 0 1px 1px;
+            display: inline-block;
+            width: 10px;
+            height: 15px;
+            position: relative;
+            text-indent: -9999em;
+        }
+
+        .folder {
+            width: 15px;
+            height: 10px;
+            display: inline-block;
+            margin: auto;
+            position: relative;
+            background-color: #708090;
+            border-radius: 0 1px 1px 1px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table id="myTable">
+        <tr>
+            <th>Name</th>
+            <th class="center">Size</th>
+            <th class="center">Last Date</th>
+        </tr>
+        <!-- TABLE_HEAR -->
+    </table>
+</body>
+
+</html>
