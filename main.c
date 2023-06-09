@@ -8,7 +8,8 @@
 #include <dirent.h>
 #include <netinet/in.h>
 #include <asm-generic/errno.h>
-#include <utils.c>
+#include "utils.c"
+#include "server.c"
 
 #define MAX_SIZE_BUFFER 1024
 #define BLUE "\033[0;34m"

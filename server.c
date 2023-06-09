@@ -6,6 +6,14 @@
 #include <string.h>
 #include <unistd.h>
 
+#define MAX_SIZE_BUFFER 1024
+#define TOK_DELIM " \t\r\n\a"
+#define ERROR "\033[0;31mmy_ftp\033[0m"
+#define HTTP_NOT_FOUND "HTTP/1.1 404 Not Found\r\n\r\n"
+#define HTTP_BAD_REQUEST "HTTP/1.1 400 Bad Request\r\n\r\n"
+#define HTTP_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error\r\n\r\n"
+#define HTTP_FORBIDDEN "HTTP/1.1 403 Forbidden\r\n\r\n"
+
 /// @brief Function that builds a sockaddr_in structure
 /// @param server_ip Server IP
 /// @param server_port Server port
@@ -44,4 +52,48 @@ int create_socket(int port) {
     }
 
     return sockfd;
+}
+
+int send_file(char *path, int clientfd) {
+
+
+    return 1;
+}
+
+int navigate(char *path, int clientfd, char *root_path) {
+
+
+    return 1;
+}
+
+void *handle_client(int clientfd, char *root_path) {
+    char buffer[MAX_SIZE_BUFFER];
+
+    if (recv(clientfd, buffer, MAX_SIZE_BUFFER, 0) == -1) {
+        perror("Error recv failed");
+        char *response = HTTP_INTERNAL_ERROR;
+        send(clientfd, response, strlen(response), 0);
+        exit(EXIT_FAILURE);
+    }
+
+    char **args = split_line(buffer, TOK_DELIM);
+
+    if (args[0] != NULL && strcmp(args[0], "GET") == 0 && args[1] != NULL) {
+        char *path = path_browser_to_server(args[1], root_path);
+
+        if (!navigate(path, clientfd, root_path) && !send_file(path, clientfd)) {
+            char *response = HTTP_NOT_FOUND;
+            send(clientfd, response, strlen(response), 0);
+        }
+        free(path);
+    } else {
+        char *response = HTTP_BAD_REQUEST;
+        send(clientfd, response, strlen(response), 0);
+    }
+
+    close(clientfd);
+
+    free(args);
+
+    return NULL;
 }
