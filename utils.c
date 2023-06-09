@@ -30,6 +30,43 @@ char **split_line(char *line, char *split) {
     return tokens;
 }
 
+char *path_to_url(char *path) {
+    char **args = split_line(path, "/");
+
+    char *url = (char *) malloc(MAX_SIZE_BUFFER);
+    url[0] = 0;
+
+    if (args[0] == NULL) strcat(url, "/");
+
+    for (int i = 0; args[i] != NULL; i++) {
+        char *output;
+
+        CURL *curl = curl_easy_init();
+
+        output = curl_easy_escape(curl, args[i], (int) strlen(args[i]));
+
+        strcat(url, "/");
+        strcat(url, output);
+        curl_easy_cleanup(curl);
+        free(output);
+    }
+
+    free(args);
+
+    return url;
+}
+
+char *url_to_path(char *path) {
+    char *output;
+    CURL *curl = curl_easy_init();
+
+    int output_length;
+    output = curl_easy_unescape(curl, path, (int) strlen(path), &output_length);
+    curl_easy_cleanup(curl);
+
+    return output;
+}
+
 // Convert a string to a positive integer
 int string_to_positive_int(char *str) {
     int output = atoi(str);
