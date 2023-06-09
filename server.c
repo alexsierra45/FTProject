@@ -1,10 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <dirent.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/sendfile.h>
+#include <errno.h>
 
 #define MAX_SIZE_BUFFER 1024
 #define TOK_DELIM " \t\r\n\a"
@@ -61,8 +67,27 @@ int send_file(char *path, int clientfd) {
 }
 
 int navigate(char *path, int clientfd, char *root_path) {
+    DIR *dir;
+    dir = opendir(path);
+    if (!dir) {
+        if (errno == EACCES) {
+            perror("Error denied acces");
+            send(clientfd, HTTP_FORBIDDEN, strlen(HTTP_FORBIDDEN), 0);
+            return 1;
+        }
+        closedir(dir);
+        return 0;
+    }
 
-
+    char *response = render(dir, path, root_path);
+    if (send(clientfd, response, strlen(response), 0) == -1) {
+        perror("Error send failed");
+        send(clientfd, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);
+        return 1;
+    }
+    
+    free(response);
+    closedir(dir);
     return 1;
 }
 
