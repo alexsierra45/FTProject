@@ -67,6 +67,37 @@ char *url_to_path(char *path) {
     return output;
 }
 
+char *path_browser_to_server(char *path, char *root_path) {
+    char *url_path = url_to_path(path);
+
+    int len = (int) strlen(url_path);
+    int len_root_path = (int) strlen(root_path);
+
+    char *new_path = (char *) malloc(len_root_path + len + 1);
+    strcpy(new_path, root_path);
+    strcat(new_path, url_path);
+
+    if (new_path[len + len_root_path - 1] == '/') new_path[len + len_root_path - 1] = 0;
+
+    free(url_path);
+    return new_path;
+}
+
+char *path_server_to_browser(char *path, char *root_path) {
+    int i;
+    int len = (int) strlen(path);
+    int len_root_path = (int) strlen(root_path);
+
+    char *new_path = (char *) malloc(len + 1);
+
+    for (i = 0; i < len - len_root_path; i++) {
+        new_path[i] = path[i + len_root_path];
+    }
+    new_path[i] = 0;
+
+    return new_path;
+}
+
 // Convert a string to a positive integer
 int string_to_positive_int(char *str) {
     int output = atoi(str);
