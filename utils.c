@@ -103,3 +103,13 @@ int string_to_positive_int(char *str) {
     int output = atoi(str);
     return output < 0 ? -1 : output;
 }
+
+void back_path(char *path) {
+    int ind = (int) strlen(path) - 1;
+    while (path[ind] != '/') {
+        ind--;
+        if (ind == -1) break;
+    }
+
+    path[ind + 1] = 0;
+}

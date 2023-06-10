@@ -12,7 +12,8 @@
 #include <sys/sendfile.h>
 #include <errno.h>
 
-#define MAX_SIZE_BUFFER 1024
+#include "render.c"
+
 #define TOK_DELIM " \t\r\n\a"
 #define ERROR "\033[0;31mmy_ftp\033[0m"
 #define HTTP_NOT_FOUND "HTTP/1.1 404 Not Found\r\n\r\n"
@@ -56,7 +57,7 @@ int create_socket(int port) {
         perror("Error listening socket");
         exit(EXIT_FAILURE);
     }
-
+    
     return sockfd;
 }
 
@@ -102,8 +103,9 @@ int navigate(char *path, int clientfd, char *root_path) {
         closedir(dir);
         return 0;
     }
-
+    
     char *response = render(dir, path, root_path);
+    puts(response);
     if (send(clientfd, response, strlen(response), 0) == -1) {
         perror("Error send failed");
         send(clientfd, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);
@@ -132,6 +134,7 @@ void *handle_client(int clientfd, char *root_path) {
 
         if (!navigate(path, clientfd, root_path) && !send_file(path, clientfd)) {
             char *response = HTTP_NOT_FOUND;
+            puts(response);
             send(clientfd, response, strlen(response), 0);
         }
         free(path);

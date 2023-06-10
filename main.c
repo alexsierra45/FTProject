@@ -8,10 +8,9 @@
 #include <dirent.h>
 #include <netinet/in.h>
 #include <asm-generic/errno.h>
-#include "utils.c"
+
 #include "server.c"
 
-#define MAX_SIZE_BUFFER 1024
 #define BLUE "\033[0;34m"
 #define RESET "\033[0m"
 #define ERROR "\033[0;31mmy_ftp\033[0m"
@@ -19,14 +18,12 @@
 
 // Principal loop
 void loop(int port, char *root_path) {
-    int sockfd, clientfd;
-    struct sockaddr_in client_address;
-    socklen_t client_address_size = sizeof(client_address);
-
-    sockfd = create_socket(port);
+    int sockfd = create_socket(port);
 
     while (True) {
-        clientfd = accept(sockfd, (struct sockaddr*)&client_address, &client_address_size);
+        struct sockaddr_in client_address;
+        socklen_t client_address_size = sizeof(client_address);
+        int clientfd = accept(sockfd, (struct sockaddr*) &client_address, &client_address_size);
 
         if (clientfd < 0) {
             perror("Error accepting client");
@@ -92,15 +89,15 @@ int main(int argn, char *argv[]) {
     int port;
     char *root_path;
 
-    // Asignación de puerto y directorio raíz
+    // Port and root path asignation
     asign_port(&port, argv);
     asign_root_path(&root_path, argv);
     
     char print_path[MAX_SIZE_BUFFER];
     char print_url[MAX_SIZE_BUFFER];
 
-    sprintf(print_path, "%smy_ftp-path%s: %s", BLUE, RESET, root_path);
-    sprintf(print_url, "%smy_ftp-url%s:  http://localhost:%d", BLUE, RESET, port);
+    sprintf(print_path, "%spath%s: %s", BLUE, RESET, root_path);
+    sprintf(print_url, "%surl%s: http://localhost:%d", BLUE, RESET, port);
 
     puts(print_path);
     puts(print_url);
