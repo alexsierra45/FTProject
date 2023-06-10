@@ -15,7 +15,7 @@
 #include "utils.h"
 
 #define MAX_SIZE_BUFFER 1024
-#define GREEN "\033[0;32m"
+#define BLUE "\033[0;34m"
 #define RESET "\033[0m"
 #define ERROR "\033[0;31mmy_ftp\033[0m"
 
@@ -94,8 +94,8 @@ int main(int argn, char *argv[]) {
     char print_path[MAX_SIZE_BUFFER];
     char print_url[MAX_SIZE_BUFFER];
 
-    sprintf(print_path, "%smy_ftp-path%s: %s", GREEN, RESET, root_path);
-    sprintf(print_url, "%smy_ftp-url%s:  http://localhost:%d", GREEN, RESET, port);
+    sprintf(print_path, "%smy_ftp-path%s: %s", BLUE, RESET, root_path);
+    sprintf(print_url, "%smy_ftp-url%s:  http://localhost:%d", BLUE, RESET, port);
 
     puts(print_path);
     puts(print_url);
