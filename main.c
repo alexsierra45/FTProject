@@ -55,7 +55,7 @@ void asign_port(int *port, char *args[]) {
         user_port = string_to_positive_int(args[1]);
 
         if (user_port == -1) {
-            fprintf(stderr, "%s: the port is not valid\n", ERROR);
+            perror("Error the port is not valid");
             exit(EXIT_FAILURE);
         } else {
             *port = user_port;
@@ -77,7 +77,7 @@ void asign_root_path(char **root_path, char *args[]) {
 
         if (user_dir) *root_path = args[2];
         else {
-            fprintf(stderr, "%s: Directory does not exist\n", ERROR);
+            perror("Error directory does not exist");
             exit(EXIT_FAILURE);
         }
 
