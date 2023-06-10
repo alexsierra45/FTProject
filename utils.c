@@ -30,6 +30,7 @@ char **split_line(char *line, char *split) {
     return tokens;
 }
 
+// Remove the last directory from a path
 void back_path(char *path) {
     int ind = (int) strlen(path) - 1;
     while (path[ind] != '/') {
@@ -76,6 +77,7 @@ char *url_to_path(char *path) {
     return output;
 }
 
+// Add the root path to the path
 char *path_browser_to_server(char *path, char *root_path) {
     char *url_path = url_to_path(path);
 
@@ -92,6 +94,7 @@ char *path_browser_to_server(char *path, char *root_path) {
     return new_path;
 }
 
+// Remove the root path from the path
 char *path_server_to_browser(char *path, char *root_path) {
     int i;
     int len = (int) strlen(path);
@@ -107,6 +110,7 @@ char *path_server_to_browser(char *path, char *root_path) {
     return new_path;
 }
 
+// Convert a string to a positive integer
 int string_to_positive_int(char *str) {
     char *ptr;
     long ret = strtol(str, &ptr, 10);

@@ -1,5 +1,4 @@
 #include <unistd.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <pwd.h>
 #include <dirent.h>
@@ -11,8 +10,7 @@
 #include <asm-generic/errno.h>
 #include <errno.h>
 
-#include "server.h"
-#include "utils.h"
+#include "server.c"
 
 #define MAX_SIZE_BUFFER 1024
 #define BLUE "\033[0;34m"
@@ -35,7 +33,12 @@ void loop(int port, char *root_path) {
         }
 
         int pid = fork();
-        if (pid == 0) {
+
+        if (pid < 0) {
+            perror("Error forking");
+            exit(EXIT_FAILURE);
+        }
+        else if (pid == 0) {
             close(sock);
             handle_client(sock_client, root_path);
             exit(EXIT_SUCCESS);

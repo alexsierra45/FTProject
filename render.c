@@ -6,9 +6,9 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#include "utils.h"
+#include "utils.c"
 
-#define MAX_SIZE_BUFFER 10240
+#define INDEX_SIZE 10240
 #define HTTP_HEADER "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"
 #define HTML_TABLE_HEAR "<!-- TABLE_HEAR -->"
 #define LINK_STYLE "onmouseover=\"this.style.color='blue'\" onmouseout=\"this.style.color='black'\" style=\"color: black; text-decoration: none;\""
@@ -110,9 +110,9 @@ void build_table_last_date(char *html_response, struct stat st) {
 char **load_html() {
     FILE *fp = fopen("index.html", "r");
 
-    char buffer[MAX_SIZE_BUFFER];
+    char buffer[INDEX_SIZE];
 
-    fread(buffer, MAX_SIZE_BUFFER, 1, fp);
+    fread(buffer, INDEX_SIZE, 1, fp);
 
     char *p = strstr(buffer, HTML_TABLE_HEAR);
 
@@ -156,7 +156,7 @@ void build_back(char *html_response, char *path, char *root_path) {
 char *build_html(DIR *d, char *path, char *root_path) {
     char **html = load_html();
     int ind = 2;
-    char *html_response = (char *) malloc(MAX_SIZE_BUFFER * ind);
+    char *html_response = (char *) malloc(INDEX_SIZE * ind);
     strcpy(html_response, HTTP_HEADER);
     strcat(html_response, html[0]);
 
@@ -185,9 +185,9 @@ char *build_html(DIR *d, char *path, char *root_path) {
 
         strcat(html_response, "</tr>");
 
-        if (MAX_SIZE_BUFFER * ind - strlen(html_response) < MAX_SIZE_BUFFER) {
+        if (INDEX_SIZE * ind - strlen(html_response) < INDEX_SIZE) {
             ind *= 2;
-            html_response = (char *) realloc(html_response, MAX_SIZE_BUFFER * ind);
+            html_response = (char *) realloc(html_response, INDEX_SIZE * ind);
         }
     }
 

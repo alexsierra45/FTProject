@@ -11,9 +11,7 @@
 #include <sys/sendfile.h>
 #include <errno.h>
 
-#include "render.h"
-#include "utils.h"
-#include "server.h"
+#include "render.c"
 
 #define MAX_SIZE_BUFFER 1024
 #define TOK_DELIM " \t\r\n\a"
@@ -73,13 +71,13 @@ int navigate(char *path, int sock_client, char *root_path) {
     if (dir == NULL) {
         if (errno != EACCES) return 0;
         send(sock_client, HTTP_FORBIDDEN, strlen(HTTP_FORBIDDEN), 0);
-        printf("%s: denied access to %s\n", ERROR, path);
+        perror("Error access denied");
         return 1;
     }
 
     char *response = render(dir, path, root_path);
     if (send(sock_client, response, strlen(response), 0) == -1) {
-        fprintf(stderr, "%s: send failed\n", ERROR);
+        perror("Error send file");
         send(sock_client, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);
         return 1;
     }
@@ -103,14 +101,14 @@ int send_file(char *path, int sock_client) {
 
     struct stat stat_buf;
     if (fstat(fd, &stat_buf) == -1) {
-        fprintf(stderr, "%s: error getting file status\n", ERROR);
+        perror("Error getting file status");
         char *response = HTTP_INTERNAL_ERROR;
         send(sock_client, response, strlen(response), 0);
         return 1;
     }
 
     if ((stat_buf.st_mode & S_IRUSR) != S_IRUSR) {
-        fprintf(stderr, "%s: file in %s doesn't have read permission\n", ERROR, path);
+        perror("Error file doesn't have read permission");
         char *response = HTTP_FORBIDDEN;
         send(sock_client, response, strlen(response), 0);
         return 1;
@@ -135,14 +133,10 @@ int send_file(char *path, int sock_client) {
 }
 
 void *handle_client(int sock_client, char *root_path) {
-    // struct Client client = *(struct Client *) arg;
-    // int sock_client = client.sock_client;
-    // char *root_path = client.root_path;
-
     char buffer[MAX_SIZE_BUFFER];
 
     if (recv(sock_client, buffer, MAX_SIZE_BUFFER, 0) == -1) {
-        perror(ERROR);
+        perror("Error recv");
         char *response = HTTP_INTERNAL_ERROR;
         send(sock_client, response, strlen(response), 0);
         exit(1);
