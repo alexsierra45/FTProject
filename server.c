@@ -105,7 +105,6 @@ int navigate(char *path, int clientfd, char *root_path) {
     }
     
     char *response = render(dir, path, root_path);
-    puts(response);
     if (send(clientfd, response, strlen(response), 0) == -1) {
         perror("Error send failed");
         send(clientfd, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);

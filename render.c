@@ -156,7 +156,7 @@ void build_back(char *html_response, char *path, char *root_path) {
 char *build_html(DIR *d, char *path, char *root_path) {
     char **html = load_html();
     int ind = 2;
-    char *html_response = (char *) malloc(MAX_SIZE_BUFFER * ind);
+    char *html_response = (char *) malloc(INDEX_SIZE * ind);
     strcpy(html_response, HTTP_HEADER);
     strcat(html_response, html[0]);
 
@@ -185,9 +185,9 @@ char *build_html(DIR *d, char *path, char *root_path) {
 
         strcat(html_response, "</tr>");
 
-        if (MAX_SIZE_BUFFER * ind - strlen(html_response) < MAX_SIZE_BUFFER) {
+        if (INDEX_SIZE * ind - strlen(html_response) < INDEX_SIZE) {
             ind *= 2;
-            html_response = (char *) realloc(html_response, MAX_SIZE_BUFFER * ind);
+            html_response = (char *) realloc(html_response, INDEX_SIZE * ind);
         }
     }
 
