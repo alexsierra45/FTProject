@@ -38,7 +38,7 @@ int create_server(int port) {
     sock1 = socket(AF_INET, SOCK_STREAM, 0);
 
     if (sock1 == -1) {
-        fprintf(stderr, "%s: socket creation failed\n", ERROR);
+        perror("Error socket creation failed");
         exit(EXIT_FAILURE);
     }
 
@@ -46,12 +46,12 @@ int create_server(int port) {
     server = build_server_addr("localhost", port);
 
     if (bind(sock1, (struct sockaddr *) &server, sizeof(server)) == -1) {
-        fprintf(stderr, "%s: binding error\n", ERROR);
+        perror("Error binding failed");
         exit(EXIT_FAILURE);
     }
 
     if (listen(sock1, 1) == -1) {
-        fprintf(stderr, "%s: listen failed\n", ERROR);
+        perror("Error listen failed");
         exit(EXIT_FAILURE);
     }
 
@@ -123,21 +123,21 @@ int send_file(char *path, int sock_client) {
                                      "Content-Length: %ld\r\n"
                                      "\r\n", path, stat_buf.st_size);
 
-    if (send(sock_client, header, strlen(header), 0) == -1
-            || sendfile(sock_client, fd, 0, stat_buf.st_size) == -1) {
-        fprintf(stderr, "%s: send failed\n", ERROR);
-        char *response = HTTP_INTERNAL_ERROR;
-        send(sock_client, response, strlen(response), 0);
+    if (send(sock_client, header, strlen(header), 0) == -1 || 
+        sendfile(sock_client, fd, 0, stat_buf.st_size) == -1) {
+            perror("Error send failed");
+            char *response = HTTP_INTERNAL_ERROR;
+            send(sock_client, response, strlen(response), 0);
     }
 
     close(fd);
     return 1;
 }
 
-void *handle_client(void *arg) {
-    struct Client client = *(struct Client *) arg;
-    int sock_client = client.sock_client;
-    char *root_path = client.root_path;
+void *handle_client(int sock_client, char *root_path) {
+    // struct Client client = *(struct Client *) arg;
+    // int sock_client = client.sock_client;
+    // char *root_path = client.root_path;
 
     char buffer[MAX_SIZE_BUFFER];
 
@@ -166,7 +166,7 @@ void *handle_client(void *arg) {
     close(sock_client);
 
     free(request);
-    free(client.root_path);
+    // free(client.root_path);
 
     return NULL;
 }

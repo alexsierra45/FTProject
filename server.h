@@ -8,6 +8,6 @@ struct Client {
 
 int create_server(int port);
 
-void *handle_client(void *arg);
+void *handle_client(int sock_client, char *root_path);
 
 #endif // MY_FTP_SERVER_H
