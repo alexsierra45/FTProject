@@ -30,6 +30,15 @@ char **split_line(char *line, char *split) {
     return tokens;
 }
 
+void back_path(char *path) {
+    int ind = (int) strlen(path) - 1;
+    while (path[ind] != '/') {
+        if (ind == -1) break;
+        ind--;
+    }
+    path[ind + 1] = 0;
+}
+
 char *path_to_url(char *path) {
     char **args = split_line(path, "/");
 
@@ -98,18 +107,11 @@ char *path_server_to_browser(char *path, char *root_path) {
     return new_path;
 }
 
-// Convert a string to a positive integer
 int string_to_positive_int(char *str) {
-    int output = atoi(str);
-    return output < 0 ? -1 : output;
-}
-
-void back_path(char *path) {
-    int ind = (int) strlen(path) - 1;
-    while (path[ind] != '/') {
-        ind--;
-        if (ind == -1) break;
+    char *ptr;
+    long ret = strtol(str, &ptr, 10);
+    if (strlen(ptr) != 0 || ret <= 0) {
+        return -1;
     }
-
-    path[ind + 1] = 0;
+    return (int)ret;
 }

@@ -6,9 +6,9 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#include "utils.c"
+#include "utils.h"
 
-#define INDEX_SIZE 10240
+#define MAX_SIZE_BUFFER 10240
 #define HTTP_HEADER "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"
 #define HTML_TABLE_HEAR "<!-- TABLE_HEAR -->"
 #define LINK_STYLE "onmouseover=\"this.style.color='blue'\" onmouseout=\"this.style.color='black'\" style=\"color: black; text-decoration: none;\""
@@ -110,9 +110,9 @@ void build_table_last_date(char *html_response, struct stat st) {
 char **load_html() {
     FILE *fp = fopen("index.html", "r");
 
-    char buffer[INDEX_SIZE];
+    char buffer[MAX_SIZE_BUFFER];
 
-    fread(buffer, INDEX_SIZE, 1, fp);
+    fread(buffer, MAX_SIZE_BUFFER, 1, fp);
 
     char *p = strstr(buffer, HTML_TABLE_HEAR);
 

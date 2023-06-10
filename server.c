@@ -6,14 +6,16 @@
 #include <string.h>
 #include <dirent.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/sendfile.h>
 #include <errno.h>
 
-#include "render.c"
+#include "render.h"
+#include "utils.h"
+#include "server.h"
 
+#define MAX_SIZE_BUFFER 1024
 #define TOK_DELIM " \t\r\n\a"
 #define ERROR "\033[0;31mmy_ftp\033[0m"
 #define HTTP_NOT_FOUND "HTTP/1.1 404 Not Found\r\n\r\n"
@@ -21,10 +23,6 @@
 #define HTTP_INTERNAL_ERROR "HTTP/1.1 500 Internal Server Error\r\n\r\n"
 #define HTTP_FORBIDDEN "HTTP/1.1 403 Forbidden\r\n\r\n"
 
-/// @brief Function that builds a sockaddr_in structure
-/// @param server_ip Server IP
-/// @param server_port Server port
-/// @return sockaddr_in structure
 struct sockaddr_in build_server_addr(char *server_ip, int server_port) {
     struct sockaddr_in server = {0};
     server.sin_family = AF_INET;
@@ -33,44 +31,88 @@ struct sockaddr_in build_server_addr(char *server_ip, int server_port) {
     return server;
 }
 
-/// @brief Function that creates a socket
-/// @param port Port to bind the socket
-/// @return Socket file descriptor
-int create_socket(int port) {
-    struct sockaddr_in server_address;
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+int create_server(int port) {
+    struct sockaddr_in server;
+    int sock1;
 
-    if (sockfd < 0) {
-        perror("Error creating socket");
+    sock1 = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (sock1 == -1) {
+        fprintf(stderr, "%s: socket creation failed\n", ERROR);
         exit(EXIT_FAILURE);
     }
 
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int) {1}, sizeof(int));
-    server_address = build_server_addr("localhost", port);
+    setsockopt(sock1, SOL_SOCKET, SO_REUSEADDR, &(int) {1}, sizeof(int));
+    server = build_server_addr("localhost", port);
 
-    if (bind(sockfd, (struct sockaddr*)&server_address, sizeof(server_address)) < 0) {
-        perror("Error binding socket");
+    if (bind(sock1, (struct sockaddr *) &server, sizeof(server)) == -1) {
+        fprintf(stderr, "%s: binding error\n", ERROR);
         exit(EXIT_FAILURE);
     }
 
-    if (listen(sockfd, 1) == -1) {
-        perror("Error listening socket");
+    if (listen(sock1, 1) == -1) {
+        fprintf(stderr, "%s: listen failed\n", ERROR);
         exit(EXIT_FAILURE);
     }
-    
-    return sockfd;
+
+    return sock1;
 }
 
-int send_file(char *path, int clientfd) {
+/**
+ * @brief Send a directory to the client, 403 if the directory is not accessible, 500 if an error occurred
+ * @param path Path to the directory
+ * @param sock_client Socket to the client
+ * @param root_path Path to the root directory
+ * @return
+ * 0 if the directory was not found\n
+ * 1 if was sent a response to the client
+ */
+int navigate(char *path, int sock_client, char *root_path) {
+    DIR *dir;
+    dir = opendir(path);
+    if (dir == NULL) {
+        if (errno != EACCES) return 0;
+        send(sock_client, HTTP_FORBIDDEN, strlen(HTTP_FORBIDDEN), 0);
+        printf("%s: denied access to %s\n", ERROR, path);
+        return 1;
+    }
+
+    char *response = render(dir, path, root_path);
+    if (send(sock_client, response, strlen(response), 0) == -1) {
+        fprintf(stderr, "%s: send failed\n", ERROR);
+        send(sock_client, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);
+        return 1;
+    }
+    free(response);
+    closedir(dir);
+    return 1;
+}
+
+/**
+ * @brief Send a file to the client, 403 if the file haven't read permission, 500 if an error occurred
+ * @param path Path to the file
+ * @param sock_client Socket to the client
+ * @return 0 if the file was not found\n
+ * 1 if was sent a response to the client
+ */
+int send_file(char *path, int sock_client) {
     int fd = open(path, O_RDONLY);
     if (fd == -1) {
         return 0;
     }
 
-    off_t offset = 0;
     struct stat stat_buf;
     if (fstat(fd, &stat_buf) == -1) {
-        perror("Error fstat failed");
+        fprintf(stderr, "%s: error getting file status\n", ERROR);
+        char *response = HTTP_INTERNAL_ERROR;
+        send(sock_client, response, strlen(response), 0);
+        return 1;
+    }
+
+    if ((stat_buf.st_mode & S_IRUSR) != S_IRUSR) {
+        fprintf(stderr, "%s: file in %s doesn't have read permission\n", ERROR, path);
+        char *response = HTTP_FORBIDDEN;
+        send(sock_client, response, strlen(response), 0);
         return 1;
     }
 
@@ -81,71 +123,50 @@ int send_file(char *path, int clientfd) {
                                      "Content-Length: %ld\r\n"
                                      "\r\n", path, stat_buf.st_size);
 
-    if (send(clientfd, header, strlen(header), 0) == -1 || 
-        sendfile(clientfd, fd, &offset, stat_buf.st_size) == -1) {
-            perror("Error send failed");
-            send(clientfd, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);
+    if (send(sock_client, header, strlen(header), 0) == -1
+            || sendfile(sock_client, fd, 0, stat_buf.st_size) == -1) {
+        fprintf(stderr, "%s: send failed\n", ERROR);
+        char *response = HTTP_INTERNAL_ERROR;
+        send(sock_client, response, strlen(response), 0);
     }
 
     close(fd);
     return 1;
 }
 
-int navigate(char *path, int clientfd, char *root_path) {
-    DIR *dir;
-    dir = opendir(path);
-    if (!dir) {
-        if (errno == EACCES) {
-            perror("Error denied acces");
-            send(clientfd, HTTP_FORBIDDEN, strlen(HTTP_FORBIDDEN), 0);
-            return 1;
-        }
-        closedir(dir);
-        return 0;
-    }
-    
-    char *response = render(dir, path, root_path);
-    puts(response);
-    if (send(clientfd, response, strlen(response), 0) == -1) {
-        perror("Error send failed");
-        send(clientfd, HTTP_INTERNAL_ERROR, strlen(HTTP_INTERNAL_ERROR), 0);
-        return 1;
-    }
-    
-    free(response);
-    closedir(dir);
-    return 1;
-}
+void *handle_client(void *arg) {
+    struct Client client = *(struct Client *) arg;
+    int sock_client = client.sock_client;
+    char *root_path = client.root_path;
 
-void *handle_client(int clientfd, char *root_path) {
     char buffer[MAX_SIZE_BUFFER];
 
-    if (recv(clientfd, buffer, MAX_SIZE_BUFFER, 0) == -1) {
-        perror("Error recv failed");
+    if (recv(sock_client, buffer, MAX_SIZE_BUFFER, 0) == -1) {
+        perror(ERROR);
         char *response = HTTP_INTERNAL_ERROR;
-        send(clientfd, response, strlen(response), 0);
-        exit(EXIT_FAILURE);
+        send(sock_client, response, strlen(response), 0);
+        exit(1);
     }
 
-    char **args = split_line(buffer, TOK_DELIM);
+    char **request = split_line(buffer, TOK_DELIM);
 
-    if (args[0] != NULL && strcmp(args[0], "GET") == 0 && args[1] != NULL) {
-        char *path = path_browser_to_server(args[1], root_path);
+    if (request[0] != NULL && strcmp(request[0], "GET") == 0 && request[1] != NULL) {
+        char *path = path_browser_to_server(request[1], root_path);
 
-        if (!navigate(path, clientfd, root_path) && !send_file(path, clientfd)) {
+        if (!navigate(path, sock_client, root_path) && !send_file(path, sock_client)) {
             char *response = HTTP_NOT_FOUND;
-            puts(response);
-            send(clientfd, response, strlen(response), 0);
+            send(sock_client, response, strlen(response), 0);
         }
         free(path);
     } else {
         char *response = HTTP_BAD_REQUEST;
-        send(clientfd, response, strlen(response), 0);
+        send(sock_client, response, strlen(response), 0);
     }
 
-    close(clientfd);
+    close(sock_client);
 
-    free(args);
+    free(request);
+    free(client.root_path);
 
     return NULL;
 }
