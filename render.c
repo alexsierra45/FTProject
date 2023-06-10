@@ -13,14 +13,7 @@
 #define HTML_TABLE_HEAR "<!-- TABLE_HEAR -->"
 #define LINK_STYLE "onmouseover=\"this.style.color='blue'\" onmouseout=\"this.style.color='black'\" style=\"color: black; text-decoration: none;\""
 
-/**
- * @brief Add the file name and link to the html row
- * @param html_response
- * @param path
- * @param root_path
- * @param file
- * @param st
- */
+// Add the file name and link to the html row
 void build_table_name(char *html_response, char *path, char *root_path, char *file, struct stat st) {
     strcat(html_response, "<td>");
     strcat(html_response, "<a ");
@@ -51,11 +44,7 @@ void build_table_name(char *html_response, char *path, char *root_path, char *fi
     strcat(html_response, "</td>");
 }
 
-/**
- * @brief Add the size of the file to the html table row
- * @param html_response
- * @param st
- */
+// Add the size of the file to the html table row
 void build_table_size(char *html_response, struct stat st) {
     strcat(html_response, "<td class=\"center\">");
 
@@ -87,11 +76,7 @@ void build_table_size(char *html_response, struct stat st) {
     strcat(html_response, "</td>");
 }
 
-/**
- * @brief Add the last date of modification to the html table row
- * @param html_response
- * @param st
- */
+// Add the last date of modification to the html table row
 void build_table_last_date(char *html_response, struct stat st) {
     strcat(html_response, "<td class=\"center\">");
 
@@ -130,12 +115,7 @@ char **load_html() {
     return html;
 }
 
-/**
- * @brief Add the back button to the html response
- * @param html_response
- * @param path
- * @param root_path
- */
+// Add the back button to the html response
 void build_back(char *html_response, char *path, char *root_path) {
     strcat(html_response, "<td>");
     strcat(html_response, "<a href=\"");

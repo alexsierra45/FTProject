@@ -160,7 +160,6 @@ void *handle_client(int sock_client, char *root_path) {
     close(sock_client);
 
     free(request);
-    // free(client.root_path);
 
     return NULL;
 }
