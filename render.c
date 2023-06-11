@@ -10,17 +10,11 @@
 
 #define INDEX_SIZE 10240
 #define HTTP_HEADER "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n"
+#define HTML_TITLE_HEAR "<!-- TITLE_HEAR -->"
 #define HTML_TABLE_HEAR "<!-- TABLE_HEAR -->"
 #define LINK_STYLE "onmouseover=\"this.style.color='blue'\" onmouseout=\"this.style.color='black'\" style=\"color: black; text-decoration: none;\""
 
-/**
- * @brief Add the file name and link to the html row
- * @param html_response
- * @param path
- * @param root_path
- * @param file
- * @param st
- */
+// Add the file name and link to the html row
 void build_table_name(char *html_response, char *path, char *root_path, char *file, struct stat st) {
     strcat(html_response, "<td>");
     strcat(html_response, "<a ");
@@ -51,11 +45,7 @@ void build_table_name(char *html_response, char *path, char *root_path, char *fi
     strcat(html_response, "</td>");
 }
 
-/**
- * @brief Add the size of the file to the html table row
- * @param html_response
- * @param st
- */
+// Add the size of the file to the html table row
 void build_table_size(char *html_response, struct stat st) {
     strcat(html_response, "<td class=\"center\">");
 
@@ -87,11 +77,7 @@ void build_table_size(char *html_response, struct stat st) {
     strcat(html_response, "</td>");
 }
 
-/**
- * @brief Add the last date of modification to the html table row
- * @param html_response
- * @param st
- */
+// Add the last date of modification to the html table row
 void build_table_last_date(char *html_response, struct stat st) {
     strcat(html_response, "<td class=\"center\">");
 
@@ -114,14 +100,19 @@ char **load_html() {
 
     fread(buffer, INDEX_SIZE, 1, fp);
 
-    char *p = strstr(buffer, HTML_TABLE_HEAR);
+    char *title = strstr(buffer, HTML_TITLE_HEAR);
+    char *table = strstr(buffer, HTML_TABLE_HEAR);
 
     char **html = (char **) malloc(2 * sizeof(char *));
 
-    html[1] = (char *) malloc(strlen(p) + 1);
-    strcpy(html[1], p);
+    html[1] = (char *) malloc(strlen(title) + 1);
+    html[2] = (char *) malloc(strlen(table) + 1);
+    title[table - title] = 0;
+    strcpy(html[1], title);
+    strcpy(html[2], table);
 
-    buffer[p - buffer] = 0;
+    buffer[title - buffer] = 0;
+
     html[0] = (char *) malloc(strlen(buffer) + 1);
     strcpy(html[0], buffer);
 
@@ -130,12 +121,7 @@ char **load_html() {
     return html;
 }
 
-/**
- * @brief Add the back button to the html response
- * @param html_response
- * @param path
- * @param root_path
- */
+// Add the back button to the html response
 void build_back(char *html_response, char *path, char *root_path) {
     strcat(html_response, "<td>");
     strcat(html_response, "<a href=\"");
@@ -153,12 +139,23 @@ void build_back(char *html_response, char *path, char *root_path) {
     strcat(html_response, "<td class=\"center\"></td><td class=\"center\"></td></tr>");
 }
 
+void build_title(char *html_response, char *path, char *root_path) {
+    strcat(html_response, "<h1>");
+    char *root = path_server_to_browser(path, root_path);
+    char *folder = folder_name(root);
+    strcat(html_response, folder);
+    strcat(html_response, "</h1>");
+}
+
 char *build_html(DIR *d, char *path, char *root_path) {
     char **html = load_html();
     int ind = 2;
     char *html_response = (char *) malloc(INDEX_SIZE * ind);
     strcpy(html_response, HTTP_HEADER);
     strcat(html_response, html[0]);
+
+    build_title(html_response, path, root_path);
+    strcat(html_response, html[1]);
 
     struct stat st;
     struct dirent *dir;
@@ -191,7 +188,7 @@ char *build_html(DIR *d, char *path, char *root_path) {
         }
     }
 
-    strcat(html_response, html[1]);
+    strcat(html_response, html[2]);
     free(html);
 
     return html_response;

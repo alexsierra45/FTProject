@@ -30,6 +30,26 @@ char **split_line(char *line, char *split) {
     return tokens;
 }
 
+// Remove the last directory from a path
+void back_path(char *path) {
+    int ind = (int) strlen(path) - 1;
+    while (path[ind] != '/') {
+        if (ind == -1) break;
+        ind--;
+    }
+    path[ind + 1] = 0;
+}
+
+char *folder_name(char *path) {
+    if (strlen(path) == 0) return "home";
+    char **folders = split_line(path, "/");
+    char *folder = ((char *) malloc(MAX_SIZE_BUFFER));
+    for (int i = 0; folders[i] != NULL; i++)
+        strcpy(folder, folders[i]);
+    
+    return folder;
+}
+
 char *path_to_url(char *path) {
     char **args = split_line(path, "/");
 
@@ -67,6 +87,7 @@ char *url_to_path(char *path) {
     return output;
 }
 
+// Add the root path to the path
 char *path_browser_to_server(char *path, char *root_path) {
     char *url_path = url_to_path(path);
 
@@ -83,6 +104,7 @@ char *path_browser_to_server(char *path, char *root_path) {
     return new_path;
 }
 
+// Remove the root path from the path
 char *path_server_to_browser(char *path, char *root_path) {
     int i;
     int len = (int) strlen(path);
@@ -100,16 +122,10 @@ char *path_server_to_browser(char *path, char *root_path) {
 
 // Convert a string to a positive integer
 int string_to_positive_int(char *str) {
-    int output = atoi(str);
-    return output < 0 ? -1 : output;
-}
-
-void back_path(char *path) {
-    int ind = (int) strlen(path) - 1;
-    while (path[ind] != '/') {
-        ind--;
-        if (ind == -1) break;
+    char *ptr;
+    long ret = strtol(str, &ptr, 10);
+    if (strlen(ptr) != 0 || ret <= 0) {
+        return -1;
     }
-
-    path[ind + 1] = 0;
+    return (int)ret;
 }

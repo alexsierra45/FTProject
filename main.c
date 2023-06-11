@@ -1,46 +1,49 @@
 #include <unistd.h>
+#include <stdio.h>
+#include <pwd.h>
+#include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
-#include <pwd.h>
-#include <errno.h>
-#include <dirent.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <asm-generic/errno.h>
+#include <errno.h>
 
 #include "server.c"
 
+#define MAX_SIZE_BUFFER 1024
 #define BLUE "\033[0;34m"
 #define RESET "\033[0m"
 #define ERROR "\033[0;31mmy_ftp\033[0m"
 #define True 1
 
-// Principal loop
 void loop(int port, char *root_path) {
-    int sockfd = create_socket(port);
+
+    int sock = create_server(port);
 
     while (True) {
-        struct sockaddr_in client_address;
-        socklen_t client_address_size = sizeof(client_address);
-        int clientfd = accept(sockfd, (struct sockaddr*) &client_address, &client_address_size);
+        struct sockaddr_in client;
+        int len = sizeof(client);
+        int sock_client = accept(sock, (struct sockaddr *) &client, (socklen_t *) &len);
 
-        if (clientfd < 0) {
-            perror("Error accepting client");
-            exit(1);
+        if (sock_client == -1) {
+            perror("Error accept failed");
+            continue;
         }
 
-        pid_t pid = fork();
+        int pid = fork();
 
         if (pid < 0) {
             perror("Error forking");
             exit(EXIT_FAILURE);
-        } else if (pid == 0) {
-            close(sockfd);
-            handle_client(clientfd, root_path);
+        }
+        else if (pid == 0) {
+            close(sock);
+            handle_client(sock_client, root_path);
             exit(EXIT_SUCCESS);
-        } 
-        else close(clientfd);
+        }
+        else close(sock_client);
     }
 }
 
@@ -52,7 +55,7 @@ void asign_port(int *port, char *args[]) {
         user_port = string_to_positive_int(args[1]);
 
         if (user_port == -1) {
-            fprintf(stderr, "%s: the port is not valid\n", ERROR);
+            perror("Error the port is not valid");
             exit(EXIT_FAILURE);
         } else {
             *port = user_port;
@@ -74,7 +77,7 @@ void asign_root_path(char **root_path, char *args[]) {
 
         if (user_dir) *root_path = args[2];
         else {
-            fprintf(stderr, "%s: Directory does not exist\n", ERROR);
+            perror("Error directory does not exist");
             exit(EXIT_FAILURE);
         }
 
