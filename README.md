@@ -59,6 +59,5 @@ Para compilar y ejecutar el proyecto, sigue los siguientes pasos:
 4. Para introducir nuevos parametros, ejecute el siguiente comando en la terminal con los valores deseados:
 
 ```
-make build
-./main <port> <root>
+make port=<port> root=<root>
 ```
