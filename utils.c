@@ -40,6 +40,16 @@ void back_path(char *path) {
     path[ind + 1] = 0;
 }
 
+char *folder_name(char *path) {
+    if (strlen(path) == 0) return "home";
+    char **folders = split_line(path, "/");
+    char *folder = ((char *) malloc(MAX_SIZE_BUFFER));
+    for (int i = 0; folders[i] != NULL; i++)
+        strcpy(folder, folders[i]);
+    
+    return folder;
+}
+
 char *path_to_url(char *path) {
     char **args = split_line(path, "/");
 
